@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from random import seed
 
@@ -106,7 +107,19 @@ def main(args):
         os.mkdir(args.model_dir)
 
     weights_name = get_weights_name(args.transformer_model, args.lowercase_tokens)
-    # weights_name = args.transformer_model
+    # Keep the backbone information next to the checkpoint.  Inference must not
+    # try to recover a Hugging Face model id (which may contain "/") from the
+    # checkpoint filename.
+    training_config = {
+        "transformer_model": weights_name,
+        "lowercase_tokens": bool(args.lowercase_tokens),
+        "special_tokens_fix": args.special_tokens_fix,
+        "use_fast": bool(args.use_fast),
+        "pieces_per_token": args.pieces_per_token,
+    }
+    with open(os.path.join(args.model_dir, "training_config.json"), "w",
+              encoding="utf-8") as config_file:
+        json.dump(training_config, config_file, ensure_ascii=False, indent=2)
     # read datasets
     reader = get_data_reader(weights_name, args.max_len, skip_correct=bool(args.skip_correct),
                              skip_complex=args.skip_complex,
@@ -316,10 +329,8 @@ if __name__ == '__main__':
                         help='The name of the pretrain weights in pretrain_folder param.',
                         default='')
     parser.add_argument('--transformer_model',
-                        choices=['bert', 'distilbert', 'gpt2', 'roberta', 'transformerxl', 'xlnet', 'albert',
-                                 'bert-large', 'roberta-large', 'xlnet-large', 'vinai/phobert-base',
-                                 'vinai/phobert-large', 'xlm-roberta-base'],
-                        help='Name of the transformer model.',
+                        help='Hugging Face model id or local model directory. '
+                             'Legacy aliases such as bert and roberta are also supported.',
                         default='roberta')
     parser.add_argument('--special_tokens_fix',
                         type=int,

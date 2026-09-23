@@ -1,5 +1,6 @@
 """Wrapper of AllenNLP model. Fixes errors based on model predictions"""
 import logging
+import json
 import os
 import sys
 from time import time
@@ -55,27 +56,59 @@ class GecBERTModel(object):
         self.indexers = []
         self.models = []
         for model_path in model_paths:
-            if is_ensemble:
-                model_name, special_tokens_fix = self._get_model_data(model_path)
-            weights_name = get_weights_name(model_name, lowercase_tokens)
-            self.indexers.append(self._get_indexer(weights_name, special_tokens_fix))
+            checkpoint_path = self._resolve_checkpoint_path(model_path)
+            checkpoint_config = self._load_checkpoint_config(model_path)
+            current_model_name = model_name or checkpoint_config.get(
+                "transformer_model")
+            current_special_tokens_fix = special_tokens_fix
+            if checkpoint_config:
+                current_special_tokens_fix = checkpoint_config.get(
+                    "special_tokens_fix", current_special_tokens_fix)
+            current_lowercase_tokens = checkpoint_config.get(
+                "lowercase_tokens", lowercase_tokens)
+            if not current_model_name:
+                raise ValueError(
+                    "Transformer model is missing. Pass --transformer_model or "
+                    "place training_config.json next to the checkpoint."
+                )
+
+            weights_name = get_weights_name(
+                current_model_name, current_lowercase_tokens)
+            self.indexers.append(self._get_indexer(
+                weights_name, current_special_tokens_fix,
+                current_lowercase_tokens))
             model = Seq2Labels(vocab=self.vocab,
-                               text_field_embedder=self._get_embbeder(weights_name, special_tokens_fix),
+                               text_field_embedder=self._get_embbeder(
+                                   weights_name, current_special_tokens_fix),
                                confidence=self.confidence
                                ).to(self.device)
             if torch.cuda.is_available():
-                model.load_state_dict(torch.load(model_path))
+                model.load_state_dict(torch.load(checkpoint_path))
             else:
-                model.load_state_dict(torch.load(model_path,
+                model.load_state_dict(torch.load(checkpoint_path,
                                                  map_location=torch.device('cpu')))
             model.eval()
             self.models.append(model)
 
     @staticmethod
-    def _get_model_data(model_path):
-        model_name = model_path.split('/')[-1]
-        tr_model, stf = model_name.split('_')[:2]
-        return tr_model, int(stf)
+    def _resolve_checkpoint_path(model_path):
+        if os.path.isdir(model_path):
+            checkpoint_path = os.path.join(model_path, "model.th")
+            if not os.path.isfile(checkpoint_path):
+                raise FileNotFoundError(
+                    f"Checkpoint not found: {checkpoint_path}")
+            return checkpoint_path
+        return model_path
+
+    @staticmethod
+    def _load_checkpoint_config(model_path):
+        checkpoint_dir = model_path if os.path.isdir(model_path) \
+            else os.path.dirname(os.path.abspath(model_path))
+        config_path = os.path.join(checkpoint_dir, "training_config.json")
+        if not os.path.isfile(config_path):
+            return {}
+        with open(config_path, encoding="utf-8") as config_file:
+            return json.load(config_file)
 
     def _restore_model(self, input_path):
         if os.path.isdir(input_path):
@@ -156,19 +189,22 @@ class GecBERTModel(object):
             allow_unmatched_keys=True)
         return text_field_embedder
 
-    def _get_indexer(self, weights_name, special_tokens_fix):
+    def _get_indexer(self, weights_name, special_tokens_fix,
+                     lowercase_tokens=None):
+        if lowercase_tokens is None:
+            lowercase_tokens = self.lowercase_tokens
         if "phobert" in weights_name:
             bert_token_indexer = WordpieceIndexer(
             pretrained_model=weights_name,
             max_pieces_per_token=5,
-            do_lowercase=self.lowercase_tokens,
+            do_lowercase=lowercase_tokens,
             use_starting_offsets=True,
             special_tokens_fix=special_tokens_fix
         )
         else:
             bert_token_indexer = PretrainedBertIndexer(
                 pretrained_model=weights_name,
-                do_lowercase=self.lowercase_tokens,
+                do_lowercase=lowercase_tokens,
                 max_pieces_per_token=5,
                 special_tokens_fix=special_tokens_fix
             )

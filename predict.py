@@ -156,11 +156,9 @@ if __name__ == '__main__':
                         action='store_true',
                         help='Whether to lowercase tokens.',)
     parser.add_argument('--transformer_model',
-                        choices=['bert', 'gpt2', 'transformerxl', 'xlnet', 'distilbert', 'roberta', 'albert'
-                                 'bert-large', 'roberta-large', 'xlnet-large', 'vinai/phobert-base',
-                                 'vinai/phobert-large', 'xlm-roberta-base'],
-                        help='Name of the transformer model.',
-                        default='roberta')
+                        help='Hugging Face model id or local model directory. '
+                             'If omitted, read it from training_config.json.',
+                        default=None)
     parser.add_argument('--iteration_count',
                         type=int,
                         help='The number of iterations of the model.',

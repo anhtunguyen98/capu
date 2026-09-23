@@ -1,0 +1,5 @@
+[
+  {"name":"vi_news","dataset":"vietgpt/binhvq_news_vi","text_column":"text","shuffle_buffer":1000,"train_samples":7500000,"dev_samples":10000,"test_samples":10000},
+  {"name":"vi_books","dataset":"tmnam20/Vietnamese-Book-Corpus","text_column":"text","shuffle_buffer":20,"train_samples":2500000,"dev_samples":10000,"test_samples":10000},
+  {"name":"en_fineweb_edu","dataset":"HuggingFaceFW/fineweb-edu","config":"sample-10BT","text_column":"text","shuffle_buffer":1000,"min_int_score":3,"min_language_score":0.9,"train_samples":5000000,"dev_samples":20000,"test_samples":20000}
+]

@@ -2,6 +2,8 @@ torch==1.9.0
 allennlp==0.8.4
 python-Levenshtein==0.12.1
 transformers
+datasets
+tensorboard
 sentencepiece
 scikit-learn==0.20.0
 overrides==4.1.2

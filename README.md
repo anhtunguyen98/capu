@@ -33,6 +33,74 @@ To train the model, simply run:
 python train.py --train_set TRAIN_SET --dev_set DEV_SET \
                 --model_dir MODEL_DIR
 ```
+
+`transformer_model` accepts any Hugging Face model id (or a local directory)
+that can be loaded by `AutoTokenizer.from_pretrained` and
+`AutoModel.from_pretrained`. For example:
+
+```bash
+python train.py --train_set TRAIN_SET --dev_set DEV_SET \
+    --model_dir MODEL_DIR \
+    --transformer_model sentence-transformers/all-MiniLM-L6-v2 \
+    --special_tokens_fix 0 --use_fast 1 --tune_bert 1
+```
+
+Training writes `training_config.json` into `MODEL_DIR`. Prediction accepts the
+whole model directory and reads the backbone configuration automatically:
+
+```bash
+python predict.py --model_path MODEL_DIR \
+    --vocab_path MODEL_DIR/vocabulary \
+    --input_file INPUT_FILE --output_file OUTPUT_FILE
+```
+
+For older checkpoints without `training_config.json`, pass the model explicitly
+with `--transformer_model MODEL_ID`.
+
+### Prepare Vietnamese news data
+
+The news dataset can be converted without loading all 19.4M rows into memory:
+
+```bash
+python utils/prepare_news_data.py \
+    --dataset vietgpt/binhvq_news_vi \
+    --output_dir data/news_capu \
+    --max_train 1000000 --max_dev 10000 --max_test 10000 \
+    --output_format tagged --min_free_gb 10
+```
+
+The default `tagged` format creates training-ready `train.txt`, `dev.txt`, and
+`test.txt` directly and avoids duplicate source/target files. Use
+`--output_format both` only when those intermediate pairs are needed. The
+generator checks free space periodically and stops while keeping completed
+output if the configured reserve would be crossed. Based on the included sample,
+10 million tagged examples require roughly 15--16 GB; checkpoints and optimizer
+state require additional space.
+
+Documents, rather than individual sentences, are assigned to a split to reduce
+data leakage. When `--output_format parallel` is used, convert the pairs to GEC
+tags with:
+
+```bash
+python utils/preprocess_data.py \
+    -s data/news_capu/train.source \
+    -t data/news_capu/train.target \
+    -o data/news_capu/train.txt
+python utils/preprocess_data.py \
+    -s data/news_capu/dev.source \
+    -t data/news_capu/dev.target \
+    -o data/news_capu/dev.txt
+```
+
+Train ViDeBERTa xsmall with `--special_tokens_fix 0`:
+
+```bash
+python train.py --train_set data/news_capu/train.txt \
+    --dev_set data/news_capu/dev.txt \
+    --model_dir outputs/videberta-xsmall-capu \
+    --transformer_model Fsoft-AIC/videberta-xsmall \
+    --special_tokens_fix 0 --use_fast 1 --tune_bert 1
+```
 There are a lot of parameters to specify among them:
 - `cold_steps_count` the number of epochs where we train only last linear layer
 - `transformer_model {bert, distilbert, gpt2, roberta, transformerxl, xlnet, albert, xlm-r, phobert, ...}` model encoder

@@ -390,6 +390,8 @@ def add_labels_to_the_tokens(source_tokens, labels, delimeters=SEQ_DELIMETERS):
 
 def convert_data_from_raw_files(source_file, target_file, output_file, chunk_size):
     tagged = []
+    # Start a fresh tagged dataset. Subsequent chunks are appended below.
+    write_lines(output_file, [], mode='w')
     source_data, target_data = read_parallel_lines(source_file, target_file)
     print(f"The size of raw dataset is {len(source_data)}")
     cnt_total, cnt_all, cnt_tp = 0, 0, 0

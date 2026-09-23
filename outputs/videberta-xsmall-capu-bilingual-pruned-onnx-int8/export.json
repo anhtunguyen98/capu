@@ -1,0 +1,18 @@
+{
+  "source_model": "outputs/videberta-xsmall-capu-bilingual-pruned",
+  "opset": 17,
+  "fp32_bytes": 149454999,
+  "int8_bytes": 53501668,
+  "compression_ratio": 2.793464289748873,
+  "onnx_checker_valid": false,
+  "onnx_checker_note": "Known ORT dynamic-quantization cross-subgraph Identity issue; model validated by ORT InferenceSession and inference smoke test.",
+  "runtime_provider": "CPUExecutionProvider",
+  "smoke_max_logit_abs_delta": 0.6903255581855774,
+  "quantization": "dynamic_int8_per_tensor",
+  "runtime_validation": "passed",
+  "vi_micro_f1_no_none": 0.8840370018975332,
+  "vi_macro_f1_no_none": 0.7312725620048001,
+  "en_micro_f1_no_none": 0.7729771996673659,
+  "en_macro_f1_no_none": 0.6697470192611988,
+  "smoke_prediction_differences_all_positions": 0
+}

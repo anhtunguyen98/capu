@@ -1,0 +1,60 @@
+{
+  "provider": "CPUExecutionProvider",
+  "threads": 12,
+  "test_samples": 1000,
+  "metrics": {
+    "micro_f1_no_none": 0.8860581156442618,
+    "macro_f1_no_none": 0.6428632762933899,
+    "classes": [
+      {
+        "label": "Upper",
+        "precision": 0.9314967860422406,
+        "recall": 0.9356207341818853,
+        "f1-score": 0.9335542057794957,
+        "support": 5421
+      },
+      {
+        "label": ".",
+        "precision": 0.9418439716312057,
+        "recall": 0.8853333333333333,
+        "f1-score": 0.9127147766323024,
+        "support": 750
+      },
+      {
+        "label": ",",
+        "precision": 0.8058522991175104,
+        "recall": 0.7536924413553432,
+        "f1-score": 0.7789001122334457,
+        "support": 2302
+      },
+      {
+        "label": ":",
+        "precision": 0.8,
+        "recall": 0.4662576687116564,
+        "f1-score": 0.5891472868217055,
+        "support": 163
+      },
+      {
+        "label": "?",
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1-score": 0.0,
+        "support": 1
+      },
+      {
+        "label": "none",
+        "precision": 0.970903310525952,
+        "recall": 0.9783751784657172,
+        "f1-score": 0.974624924117596,
+        "support": 28717
+      }
+    ]
+  },
+  "batch_1_timing": {
+    "samples": 10,
+    "mean_ms": 15.186490467749536,
+    "median_ms": 16.126914066262543,
+    "p95_ms": 17.46428074548021,
+    "samples_per_second": 65.84799839855222
+  }
+}
